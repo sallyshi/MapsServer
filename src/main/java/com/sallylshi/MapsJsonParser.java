@@ -52,9 +52,9 @@ public class MapsJsonParser {
             Statement stat = conn.createStatement();
             for (PlaceVisit p : placeVisits) {
                     stat.addBatch("insert into placevisit values " + p.generateSqlString() + ";");
-                System.out.println(
-                        "PlaceVisit: " + p.location + p.duration + p.centerLngE7 + p.centerLatE7 +
-                                "List size is: " + placeVisits.size());
+//                System.out.println(
+//                        "PlaceVisit: " + p.location + p.duration + p.centerLngE7 + p.centerLatE7 +
+//                                "List size is: " + placeVisits.size());
             }
             stat.executeBatch();
             ResultSet rs = stat.executeQuery("select * from placevisit;");
