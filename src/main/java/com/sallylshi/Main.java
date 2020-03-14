@@ -16,9 +16,9 @@ public class Main {
         Main main = new Main();
         MapsJsonParser mapsJsonParser = new MapsJsonParser();
         JsonReader reader = new JsonReader((new InputStreamReader(main.processFile())));
-        mapsJsonParser.read(reader);
 
         main.openDatabase();
+        mapsJsonParser.read(reader);
     }
 
     public void openDatabase() {

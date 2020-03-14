@@ -1,12 +1,11 @@
 package com.sallylshi;
 
 import java.io.*;
+import java.sql.*;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
-import javax.json.Json;
 
-import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
 
 public class MapsJsonParser {
@@ -49,12 +48,17 @@ public class MapsJsonParser {
             reader.endArray();
             reader.endObject();
 
+            Connection conn = DriverManager.getConnection("jdbc:sqlite:test.db");
+            Statement stat = conn.createStatement();
             for (PlaceVisit p : placeVisits) {
+                   // stat.addBatch("insert into placevisit values " + p.generateSqlString() + ";");
                 System.out.println(
                         "PlaceVisit: " + p.location + p.duration + p.centerLngE7 + p.centerLatE7 +
                                 "List size is: " + placeVisits.size());
             }
-        } catch (IOException e) {
+            stat.executeBatch();
+            System.out.println("Successfully executed batch for placevisit.");
+        } catch (IOException | SQLException e) {
             e.printStackTrace();
         }
 
@@ -74,10 +78,10 @@ public class MapsJsonParser {
             String n = reader.nextName();
             switch (n) {
                 case "location":
-                    parseLocation(reader);
+                    location = parseLocation(reader);
                     break;
                 case "duration":
-                    parseDuration(reader);
+                    duration = parseDuration(reader);
                     break;
                 case "placeConfidence":
                     placeConfidence = Enum.valueOf(PlaceVisit.PlaceConfidence.class,
@@ -92,7 +96,6 @@ public class MapsJsonParser {
                     break;
                 case "centerLatE7":
                     long lat = reader.nextLong();
-                    System.out.println("centerLatE227 lattitude is " + lat);
                     centerLatE7 = lat;
                     break;
                 case "centerLngE7":

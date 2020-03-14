@@ -45,6 +45,16 @@ class PlaceVisit {
         this.simplifiedRawPath = simplifiedRawPath;
     }
 
+    public String generateSqlString() {
+        return ("(" + location.latitudeE7
+                + ", " + location.latitudeE7
+                + ", " + location.placeId
+                + ", " +  location.address
+                + ", " + location.name
+                + ", " + location.sourceInfo.deviceTag
+                + ", " +  duration.toMillis() + ")");
+    }
+
     public void writeToDatabase(long latitude, long longitude, String placeId, String address, String name, int deviceTag, long durationMs) {
         try {
             Connection conn = DriverManager.getConnection("jdbc:sqlite:test.db");
