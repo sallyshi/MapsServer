@@ -51,12 +51,24 @@ public class MapsJsonParser {
             Connection conn = DriverManager.getConnection("jdbc:sqlite:test.db");
             Statement stat = conn.createStatement();
             for (PlaceVisit p : placeVisits) {
-                   // stat.addBatch("insert into placevisit values " + p.generateSqlString() + ";");
+                    stat.addBatch("insert into placevisit values " + p.generateSqlString() + ";");
                 System.out.println(
                         "PlaceVisit: " + p.location + p.duration + p.centerLngE7 + p.centerLatE7 +
                                 "List size is: " + placeVisits.size());
             }
             stat.executeBatch();
+            ResultSet rs = stat.executeQuery("select * from placevisit;");
+            while (rs.next()) {
+                System.out.println("latitude = " + rs.getLong("lat"));
+                System.out.println("longitude = " + rs.getLong("long"));
+                System.out.println("placeId = " + rs.getString("placeId"));
+                System.out.println("address = " + rs.getString("address"));
+                System.out.println("name = " + rs.getString("name"));
+                System.out.println("deviceTag = " + rs.getLong("deviceTag"));
+                System.out.println("durationMs = " + rs.getLong("durationMs"));
+            }
+            conn.close();
+            conn.close();
             System.out.println("Successfully executed batch for placevisit.");
         } catch (IOException | SQLException e) {
             e.printStackTrace();

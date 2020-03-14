@@ -25,7 +25,8 @@ public class Main {
         try {
             Connection conn = DriverManager.getConnection("jdbc:sqlite:test.db");
             Statement stat = conn.createStatement();
-            stat.executeUpdate("create table if not exists placevisit (lat, long, placeId, address, name, deviceTag, durationMs);");
+            stat.executeUpdate("drop table placevisit;");
+            stat.executeUpdate("create table placevisit (lat, long, placeId, address, name, deviceTag, durationMs);");
 
         } catch (SQLException e) {
             e.printStackTrace();
