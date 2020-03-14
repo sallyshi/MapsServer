@@ -19,20 +19,7 @@ public class MapsJsonParser {
     ArrayList<Location> otherCandidateLocations;
     PlaceVisit.EditConfirmationStatus editConfirmationStatus;
 
-    public static void main(String[] args) {
-        MapsJsonParser mapsJsonParser = new MapsJsonParser();
-        JsonReader reader = new JsonReader((new InputStreamReader(mapsJsonParser.processFile())));
-        mapsJsonParser.read(reader);
-    }
 
-    public FileInputStream processFile() {
-        try {
-            return new FileInputStream("/Users/sshii/IdeaProjects/MapsServer/src/resources/2020_JANUARY.json");
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
 
     String read(JsonReader reader) {
         try {
@@ -85,7 +72,6 @@ public class MapsJsonParser {
         reader.beginObject();
         while (reader.hasNext()) {
             String n = reader.nextName();
-            System.out.println("SALLY name is " + n);
             switch (n) {
                 case "location":
                     parseLocation(reader);
