@@ -29,6 +29,7 @@ public class MapsJsonParser {
             while (reader.hasNext()) {
                 reader.beginObject();
                 String n = reader.nextName();
+                System.out.println("read: while reader has next " + n);
                 switch (n) {
                     case "placeVisit":
                         placeVisits.add(parsePlaceVisit(reader));
@@ -44,6 +45,7 @@ public class MapsJsonParser {
                         break;
                 }
                 reader.endObject();
+                System.out.println("Successfully ended object in while loop" + reader.peek());
             }
             reader.endArray();
             reader.endObject();
@@ -89,6 +91,7 @@ public class MapsJsonParser {
             ArrayList<Activity> activities = new ArrayList<>();
             ArrayList<Waypoint> waypointPath = new ArrayList<>();
             ArrayList<Point> simplifiedRawPath = new ArrayList<>();
+            ArrayList<Location> transitPath = new ArrayList<>();
 
             reader.beginObject();
             while (reader.hasNext()) {
@@ -115,24 +118,54 @@ public class MapsJsonParser {
                     case "activities":
                         reader.beginArray();
                         while (reader.hasNext()) {
-                            System.out.println("activities peek type" + reader.peek());
                             activities.add(parseActivity(reader));
                         }
                         reader.endArray();
                         break;
                     case "waypointPath":
+                        reader.beginObject();
+                        reader.nextName();
                         reader.beginArray();
                         while (reader.hasNext()) {
                             waypointPath.add(parseWaypoint(reader));
                         }
                         reader.endArray();
+                        reader.endObject();
                         break;
                     case "simplifiedRawPath":
+                        reader.beginObject();
+                        reader.nextName();
                         reader.beginArray();
                         while (reader.hasNext()) {
                             simplifiedRawPath.add(parsePoint(reader));
                         }
                         reader.endArray();
+                        reader.endObject();
+                        break;
+                    case "transitPath":
+                        reader.beginObject();
+                        while(reader.hasNext()) {
+                            String o = reader.nextName();
+                            switch(o) {
+                                case "transitStops":
+                                reader.beginArray();
+                                while (reader.hasNext()) {
+                                    transitPath.add(parseLocation(reader));
+                                }
+                                reader.endArray();
+                                break;
+                                case "name":
+                                case"hexRgbColor":
+                                    reader.skipValue();
+                                    break;
+                                default:
+                                    System.out.println("MapsJsonParser: Parsing transit path couldn't find name " + o + ". Went into " +
+                                            "default.");
+                                    throw new IllegalArgumentException("Parsing transit path couldn't find name " + o +
+                                            ". Went into default.");
+                            }
+                        }
+                        reader.endObject();
                         break;
                     default:
                         System.out.println("MapsJsonParser: Parsing Activity Segment couldn't find name " + n + ". Went into " +
@@ -141,6 +174,7 @@ public class MapsJsonParser {
                                 ". Went into default.");
                 }
             }
+            reader.endObject();
             activitySegment = new ActivitySegment(startLocation, endLocation, duration, distance, confidence, activityType, activities, waypointPath, simplifiedRawPath);
         } catch (IOException e) {
             System.out.println("MapsJsonParse: IOException at parseActivitySegment");
@@ -151,30 +185,34 @@ public class MapsJsonParser {
     private Point parsePoint(JsonReader reader) {
         Point point = null;
         try {
+            reader.beginObject();
             long latE7 = 0;
             long lngE7 = 0;
             long timestampMs = 0;
             int accuracyMeters = 0;
-            String n = reader.nextName();
-            switch (n) {
-                case "latE7":
-                    latE7 = reader.nextLong();
-                    break;
-                case "lngE7":
-                    lngE7 = reader.nextLong();
-                    break;
-                case "timestampMs":
-                    timestampMs = reader.nextLong();
-                    break;
-                case "accuracyMeters":
-                    accuracyMeters = reader.nextInt();
-                    break;
-                default:
-                    System.out.println("MapsJsonParser: Parsing Point couldn't find name " + n + ". Went into " +
-                            "default.");
-                    throw new IllegalArgumentException("Parsing Point couldn't find name " + n +
-                            ". Went into default.");
+            while(reader.hasNext()) {
+                String n = reader.nextName();
+                switch (n) {
+                    case "latE7":
+                        latE7 = reader.nextLong();
+                        break;
+                    case "lngE7":
+                        lngE7 = reader.nextLong();
+                        break;
+                    case "timestampMs":
+                        timestampMs = reader.nextLong();
+                        break;
+                    case "accuracyMeters":
+                        accuracyMeters = reader.nextInt();
+                        break;
+                    default:
+                        System.out.println("MapsJsonParser: Parsing Point couldn't find name " + n + ". Went into " +
+                                "default.");
+                        throw new IllegalArgumentException("Parsing Point couldn't find name " + n +
+                                ". Went into default.");
+                }
             }
+            reader.endObject();
             point = new Point(latE7, lngE7, timestampMs, accuracyMeters);
         } catch (IOException e) {
             System.out.println("MapsJsonParse: IOException at parsePoint");
