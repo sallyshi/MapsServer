@@ -18,11 +18,10 @@ public class MapsJsonParser {
     ArrayList<Location> otherCandidateLocations;
     PlaceVisit.EditConfirmationStatus editConfirmationStatus;
 
-
-
     String read(JsonReader reader) {
         try {
             ArrayList<PlaceVisit> placeVisits = new ArrayList<>();
+            ArrayList<ActivitySegment> activitySegments = new ArrayList<>();
             reader.beginObject();
             reader.nextName();
             reader.beginArray();
@@ -35,8 +34,9 @@ public class MapsJsonParser {
                         placeVisits.add(parsePlaceVisit(reader));
                         break;
                     case "activitySegment":
+                        activitySegments.add(parseActivitySegment(reader));
                         //Temporary
-                        reader.skipValue();
+                        //reader.skipValue();
                         break;
                     default:
                         System.out.println("MapsJsonReader: Parsing overall couldn't find name " + n + ". Went into " +
@@ -51,7 +51,7 @@ public class MapsJsonParser {
             Connection conn = DriverManager.getConnection("jdbc:sqlite:test.db");
             Statement stat = conn.createStatement();
             for (PlaceVisit p : placeVisits) {
-                    stat.addBatch("insert into placevisit values " + p.generateSqlString() + ";");
+                stat.addBatch("insert into placevisit values " + p.generateSqlString() + ";");
 //                System.out.println(
 //                        "PlaceVisit: " + p.location + p.duration + p.centerLngE7 + p.centerLatE7 +
 //                                "List size is: " + placeVisits.size());
@@ -77,71 +77,228 @@ public class MapsJsonParser {
         return "YAY";
     }
 
-    private PlaceVisit parsePlaceVisit(JsonReader reader) throws IOException {
-        PlaceVisit.PlaceConfidence placeConfidence = null;
-        long centerLatE7 = 0;
-        long centerLngE7 = 0;
-        int visitConfidence = 0;
-        ArrayList<Location> otherCandidateLocations = new ArrayList<>();
-        ArrayList<PlaceVisit> childVisits = new ArrayList<>();
-        PlaceVisit.EditConfirmationStatus editConfirmationStatus = null;
-        reader.beginObject();
-        while (reader.hasNext()) {
+    private ActivitySegment parseActivitySegment(JsonReader reader) {
+        ActivitySegment activitySegment = null;
+        try {
+            Location startLocation = null;
+            Location endLocation = null;
+            Duration duration = null;
+            long distance = 0;
+            ActivitySegment.Confidence confidence = null;
+            ArrayList<Activity> activities = new ArrayList<>();
+            ArrayList<Waypoint> waypointPath = new ArrayList<>();
+            ArrayList<Point> simplifiedRawPath = new ArrayList<>();
+
+            reader.beginObject();
+            while (reader.hasNext()) {
+                String n = reader.nextName();
+                switch (n) {
+                    case "startLocation":
+                        startLocation = parseLocation(reader);
+                        break;
+                    case "endLocation":
+                        endLocation = parseLocation(reader);
+                        break;
+                    case "duration":
+                        duration = parseDuration(reader);
+                        break;
+                    case "distance": //meters
+                        distance = reader.nextLong();
+                        break;
+                    case "confidence":
+                        confidence = Enum.valueOf(ActivitySegment.Confidence.class, reader.nextString());
+                    case "activities":
+                        reader.beginArray();
+                        while (reader.hasNext()) {
+                            activities.add(parseActivity(reader));
+                        }
+                        reader.endArray();
+                    case "waypointPath":
+                        reader.beginArray();
+                        while (reader.hasNext()) {
+                            waypointPath.add(parseWaypoint(reader));
+                        }
+                        reader.endArray();
+                        break;
+                    case "simplifiedRawPath":
+                        reader.beginArray();
+                        while (reader.hasNext()) {
+                            simplifiedRawPath.add(parsePoint(reader));
+                        }
+                        reader.endArray();
+                        break;
+                    default:
+                        System.out.println("MapsJsonParser: Parsing Activity Segment couldn't find name " + n + ". Went into " +
+                                "default.");
+                        throw new IllegalArgumentException("Parsing Activity Segment couldn't find name " + n +
+                                ". Went into default.");
+                }
+            }
+            activitySegment = new ActivitySegment(startLocation, endLocation, duration, distance, confidence, activities, waypointPath, simplifiedRawPath);
+        } catch (IOException e) {
+            System.out.println("MapsJsonParse: IOException at parseActivitySegment");
+        }
+        return activitySegment;
+    }
+
+    private Point parsePoint(JsonReader reader) {
+        Point point = null;
+        try {
+            long latE7 = 0;
+            long lngE7 = 0;
+            long timestampMs = 0;
+            int accuracyMeters = 0;
             String n = reader.nextName();
             switch (n) {
-                case "location":
-                    location = parseLocation(reader);
+                case "latE7":
+                    latE7 = reader.nextLong();
                     break;
-                case "duration":
-                    duration = parseDuration(reader);
+                case "lngE7":
+                    lngE7 = reader.nextLong();
                     break;
-                case "placeConfidence":
-                    placeConfidence = Enum.valueOf(PlaceVisit.PlaceConfidence.class,
-                            reader.nextString());
+                case "timestampMs":
+                    timestampMs = reader.nextLong();
                     break;
-                case "childVisits":
-                    reader.beginArray();
-                    while (reader.hasNext()) {
-                        childVisits.add(parsePlaceVisit(reader));
-                    }
-                    reader.endArray();
-                    break;
-                case "centerLatE7":
-                    long lat = reader.nextLong();
-                    centerLatE7 = lat;
-                    break;
-                case "centerLngE7":
-                    centerLngE7 = reader.nextLong();
-                    break;
-                case "visitConfidence":
-                    visitConfidence = reader.nextInt();
-                    break;
-                case "otherCandidateLocations":
-                    reader.beginArray();
-                    while (reader.hasNext()) {
-                        otherCandidateLocations.add(parseLocation(reader));
-                    }
-                    reader.endArray();
-                    break;
-                case "editConfirmationStatus":
-                    Enum.valueOf(PlaceVisit.EditConfirmationStatus.class,
-                            reader.nextString());
-                    break;
-                case "simplifiedRawPath":
-                    //Temporary
-                    reader.skipValue();
+                case "accuracyMeters":
+                    accuracyMeters = reader.nextInt();
                     break;
                 default:
-                    System.out.println("MapsJsonParser: Parsing Visit couldn't find name " + n + ". Went into " +
+                    System.out.println("MapsJsonParser: Parsing Point couldn't find name " + n + ". Went into " +
                             "default.");
-                    throw new IllegalArgumentException("Parsing Visit couldn't find name " + n +
+                    throw new IllegalArgumentException("Parsing Point couldn't find name " + n +
                             ". Went into default.");
             }
+            point = new Point(latE7, lngE7, timestampMs, accuracyMeters);
+        } catch (IOException e) {
+            System.out.println("MapsJsonParse: IOException at parsePoint");
         }
-        reader.endObject();
-        return new PlaceVisit(location, duration, placeConfidence, centerLatE7, centerLngE7
-                , visitConfidence, otherCandidateLocations, editConfirmationStatus, childVisits,
-                null);
+        return point;
+    }
+
+    private Waypoint parseWaypoint(JsonReader reader) {
+        Waypoint waypoint = null;
+        try {
+            long latE7 = 0;
+            long lngE7 = 0;
+            String n = reader.nextName();
+            switch (n) {
+                case "latE7":
+                    latE7 = reader.nextLong();
+                    break;
+                case "lngE7":
+                    lngE7 = reader.nextLong();
+                    break;
+                default:
+                    System.out.println("MapsJsonParser: Parsing Waypoint couldn't find name " + n + ". Went into " +
+                            "default.");
+                    throw new IllegalArgumentException("Parsing Waypoint couldn't find name " + n +
+                            ". Went into default.");
+            }
+            waypoint = new Waypoint(latE7, lngE7);
+        } catch (IOException e) {
+            System.out.println("MapsJsonParse: IOException at parsePoint");
+        }
+        return waypoint;
+    }
+
+    private Activity parseActivity(JsonReader reader) {
+        Activity.ActivityType activityType = null;
+        double probability = 0;
+        try {
+            reader.beginObject();
+            String n = reader.nextName();
+            switch (n) {
+                case "activityType":
+                    activityType = Enum.valueOf(Activity.ActivityType.class, reader.nextString());
+                    break;
+                case "probability":
+                    probability = reader.nextDouble();
+                    break;
+                default:
+                    System.out.println("MapsJsonParser: Parsing Activity couldn't find name " + n + ". Went into " +
+                            "default.");
+                    throw new IllegalArgumentException("Parsing Activity couldn't find name " + n +
+                            ". Went into default.");
+            }
+            reader.endObject();
+        } catch (IOException e) {
+            System.out.println("MapsJsonParse: IOException at parseActivities");
+        }
+        return new Activity(activityType, probability);
+    }
+
+    private PlaceVisit parsePlaceVisit(JsonReader reader) {
+        PlaceVisit placeVisit = null;
+        try {
+            PlaceVisit.PlaceConfidence placeConfidence = null;
+            long centerLatE7 = 0;
+            long centerLngE7 = 0;
+            int visitConfidence = 0;
+            ArrayList<Location> otherCandidateLocations = new ArrayList<>();
+            ArrayList<PlaceVisit> childVisits = new ArrayList<>();
+            PlaceVisit.EditConfirmationStatus editConfirmationStatus = null;
+            reader.beginObject();
+            while (reader.hasNext()) {
+                String n = reader.nextName();
+                switch (n) {
+                    case "location":
+                        location = parseLocation(reader);
+                        break;
+                    case "duration":
+                        duration = parseDuration(reader);
+                        break;
+                    case "placeConfidence":
+                        placeConfidence = Enum.valueOf(PlaceVisit.PlaceConfidence.class,
+                                reader.nextString());
+                        break;
+                    case "childVisits":
+                        reader.beginArray();
+                        while (reader.hasNext()) {
+                            childVisits.add(parsePlaceVisit(reader));
+                        }
+                        reader.endArray();
+                        break;
+                    case "centerLatE7":
+                        long lat = reader.nextLong();
+                        centerLatE7 = lat;
+                        break;
+                    case "centerLngE7":
+                        centerLngE7 = reader.nextLong();
+                        break;
+                    case "visitConfidence":
+                        visitConfidence = reader.nextInt();
+                        break;
+                    case "otherCandidateLocations":
+                        reader.beginArray();
+                        while (reader.hasNext()) {
+                            otherCandidateLocations.add(parseLocation(reader));
+                        }
+                        reader.endArray();
+                        break;
+                    case "editConfirmationStatus":
+                        Enum.valueOf(PlaceVisit.EditConfirmationStatus.class,
+                                reader.nextString());
+                        break;
+                    case "simplifiedRawPath":
+                        //Temporary
+                        reader.skipValue();
+                        break;
+                    default:
+                        System.out.println("MapsJsonParser: Parsing Visit couldn't find name " + n + ". Went into " +
+                                "default.");
+                        throw new IllegalArgumentException("Parsing Visit couldn't find name " + n +
+                                ". Went into default.");
+                }
+            }
+            reader.endObject();
+
+            placeVisit = new PlaceVisit(location, duration, placeConfidence, centerLatE7, centerLngE7
+                    , visitConfidence, otherCandidateLocations, editConfirmationStatus, childVisits,
+                    null);
+        } catch (IOException e) {
+            System.out.println("MapsJsonReader: IOException from parsePlaceVisit");
+        }
+        return placeVisit;
     }
 
     private Duration parseDuration(JsonReader reader) throws IOException {
