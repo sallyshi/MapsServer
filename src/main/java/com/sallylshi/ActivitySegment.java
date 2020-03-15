@@ -22,7 +22,7 @@ public class ActivitySegment {
         SAILING;
     }
     enum Confidence {
-        LOW, MEDIUM, HIGH;
+        UNKNOWN_CONFIDENCE, LOW, MEDIUM, HIGH;
     }
 
     Location startLocation;

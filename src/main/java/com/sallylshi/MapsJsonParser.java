@@ -70,7 +70,6 @@ public class MapsJsonParser {
                 System.out.println("durationMs = " + rs.getLong("durationMs"));
             }
             conn.close();
-            conn.close();
             System.out.println("Successfully executed batch for placevisit.");
         } catch (IOException | SQLException e) {
             e.printStackTrace();
