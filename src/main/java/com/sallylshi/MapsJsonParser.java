@@ -108,14 +108,17 @@ public class MapsJsonParser {
                         break;
                     case "confidence":
                         confidence = Enum.valueOf(ActivitySegment.Confidence.class, reader.nextString());
+                        break;
                     case "activityType":
                         activityType = Enum.valueOf(ActivitySegment.ActivityType.class, reader.nextString());
+                        break;
                     case "activities":
                         reader.beginArray();
                         while (reader.hasNext()) {
                             activities.add(parseActivity(reader));
                         }
                         reader.endArray();
+                        break;
                     case "waypointPath":
                         reader.beginArray();
                         while (reader.hasNext()) {
