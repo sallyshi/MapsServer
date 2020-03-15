@@ -115,6 +115,7 @@ public class MapsJsonParser {
                     case "activities":
                         reader.beginArray();
                         while (reader.hasNext()) {
+                            System.out.println("activities peek type" + reader.peek());
                             activities.add(parseActivity(reader));
                         }
                         reader.endArray();
@@ -186,20 +187,25 @@ public class MapsJsonParser {
         try {
             long latE7 = 0;
             long lngE7 = 0;
-            String n = reader.nextName();
-            switch (n) {
-                case "latE7":
-                    latE7 = reader.nextLong();
-                    break;
-                case "lngE7":
-                    lngE7 = reader.nextLong();
-                    break;
-                default:
-                    System.out.println("MapsJsonParser: Parsing Waypoint couldn't find name " + n + ". Went into " +
-                            "default.");
-                    throw new IllegalArgumentException("Parsing Waypoint couldn't find name " + n +
-                            ". Went into default.");
+            reader.beginObject();
+
+            while (reader.hasNext()) {
+                String n = reader.nextName();
+                switch (n) {
+                    case "latE7":
+                        latE7 = reader.nextLong();
+                        break;
+                    case "lngE7":
+                        lngE7 = reader.nextLong();
+                        break;
+                    default:
+                        System.out.println("MapsJsonParser: Parsing Waypoint couldn't find name " + n + ". Went into " +
+                                "default.");
+                        throw new IllegalArgumentException("Parsing Waypoint couldn't find name " + n +
+                                ". Went into default.");
+                }
             }
+            reader.endObject();
             waypoint = new Waypoint(latE7, lngE7);
         } catch (IOException e) {
             System.out.println("MapsJsonParse: IOException at parsePoint");
@@ -209,28 +215,32 @@ public class MapsJsonParser {
 
     private Activity parseActivity(JsonReader reader) {
         ActivitySegment.ActivityType activityType = null;
+        Activity activity = null;
         double probability = 0;
         try {
             reader.beginObject();
-            String n = reader.nextName();
-            switch (n) {
-                case "activityType":
-                    activityType = Enum.valueOf(ActivitySegment.ActivityType.class, reader.nextString());
-                    break;
-                case "probability":
-                    probability = reader.nextDouble();
-                    break;
-                default:
-                    System.out.println("MapsJsonParser: Parsing Activity couldn't find name " + n + ". Went into " +
-                            "default.");
-                    throw new IllegalArgumentException("Parsing Activity couldn't find name " + n +
-                            ". Went into default.");
+            while (reader.hasNext()) {
+                String n = reader.nextName();
+                switch (n) {
+                    case "activityType":
+                        activityType = Enum.valueOf(ActivitySegment.ActivityType.class, reader.nextString());
+                        break;
+                    case "probability":
+                        probability = reader.nextDouble();
+                        break;
+                    default:
+                        System.out.println("MapsJsonParser: Parsing Activity couldn't find name " + n + ". Went into " +
+                                "default.");
+                        throw new IllegalArgumentException("Parsing Activity couldn't find name " + n +
+                                ". Went into default.");
+                }
             }
             reader.endObject();
+            activity = new Activity(activityType, probability);
         } catch (IOException e) {
             System.out.println("MapsJsonParse: IOException at parseActivities");
         }
-        return new Activity(activityType, probability);
+        return activity;
     }
 
     private PlaceVisit parsePlaceVisit(JsonReader reader) {
