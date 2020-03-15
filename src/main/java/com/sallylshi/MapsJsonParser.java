@@ -85,6 +85,7 @@ public class MapsJsonParser {
             Duration duration = null;
             long distance = 0;
             ActivitySegment.Confidence confidence = null;
+            ActivitySegment.ActivityType activityType = null;
             ArrayList<Activity> activities = new ArrayList<>();
             ArrayList<Waypoint> waypointPath = new ArrayList<>();
             ArrayList<Point> simplifiedRawPath = new ArrayList<>();
@@ -107,6 +108,8 @@ public class MapsJsonParser {
                         break;
                     case "confidence":
                         confidence = Enum.valueOf(ActivitySegment.Confidence.class, reader.nextString());
+                    case "activityType":
+                        activityType = Enum.valueOf(ActivitySegment.ActivityType.class, reader.nextString());
                     case "activities":
                         reader.beginArray();
                         while (reader.hasNext()) {
@@ -134,7 +137,7 @@ public class MapsJsonParser {
                                 ". Went into default.");
                 }
             }
-            activitySegment = new ActivitySegment(startLocation, endLocation, duration, distance, confidence, activities, waypointPath, simplifiedRawPath);
+            activitySegment = new ActivitySegment(startLocation, endLocation, duration, distance, confidence, activityType, activities, waypointPath, simplifiedRawPath);
         } catch (IOException e) {
             System.out.println("MapsJsonParse: IOException at parseActivitySegment");
         }
@@ -202,14 +205,14 @@ public class MapsJsonParser {
     }
 
     private Activity parseActivity(JsonReader reader) {
-        Activity.ActivityType activityType = null;
+        ActivitySegment.ActivityType activityType = null;
         double probability = 0;
         try {
             reader.beginObject();
             String n = reader.nextName();
             switch (n) {
                 case "activityType":
-                    activityType = Enum.valueOf(Activity.ActivityType.class, reader.nextString());
+                    activityType = Enum.valueOf(ActivitySegment.ActivityType.class, reader.nextString());
                     break;
                 case "probability":
                     probability = reader.nextDouble();
