@@ -398,7 +398,7 @@ public class MapsJsonParser {
                     address = reader.nextString();
                     break;
                 case "name":
-                    name = reader.nextString();
+                    name = reader.nextString().replaceAll("\\\"", "");
                     break;
                 case "sourceInfo":
                     sourceInfo = parseSourceInfo(reader);
