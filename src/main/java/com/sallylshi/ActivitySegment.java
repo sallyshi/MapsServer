@@ -5,6 +5,8 @@ import java.util.ArrayList;
 
 public class ActivitySegment {
     enum ActivityType {
+        UNKNOWN_ACTIVITY_TYPE,
+        HIKING,
         WALKING,
         IN_SUBWAY,
         IN_BUS,
@@ -29,6 +31,7 @@ public class ActivitySegment {
     Location endLocation;
     Duration duration;
     long distance;
+    long startTimestampMs;
     Confidence confidence;
     ActivityType activityType;
     ArrayList<Activity> activities;
@@ -38,11 +41,12 @@ public class ActivitySegment {
     ActivitySegment(Location startLocation, Location endLocation, Duration duration,
                     long distance, Confidence confidence, ActivityType activityType,
                     ArrayList<Activity> activities, ArrayList<Waypoint> waypointPath,
-                    ArrayList<Point> simplifiedRawPath) {
+                    ArrayList<Point> simplifiedRawPath, long startTimestampMs) {
         this.startLocation = startLocation;
         this.endLocation = endLocation;
         this.duration = duration;
         this.distance = distance;
+        this.startTimestampMs = startTimestampMs;
         this.confidence = confidence;
         this.activityType = activityType;
         this.activities = activities;

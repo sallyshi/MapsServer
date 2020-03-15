@@ -1,6 +1,5 @@
 package com.sallylshi;
 
-import java.sql.*;
 import java.time.Duration;
 import java.util.ArrayList;
 
@@ -18,6 +17,7 @@ class PlaceVisit {
 
     Location location;
     Duration duration;
+    long startTimestampMs;
     PlaceConfidence placeConfidence;
     long centerLatE7;
     long centerLngE7;
@@ -32,9 +32,10 @@ class PlaceVisit {
                long centerLngE7, double visitConfidence,
                ArrayList<Location> otherCandidateLocations,
                EditConfirmationStatus editConfirmationStatus, ArrayList<PlaceVisit> childVisits,
-               ArrayList<Point> simplifiedRawPath) {
+               ArrayList<Point> simplifiedRawPath, long startTimestampMs) {
         this.location = location;
         this.duration = duration;
+        this.startTimestampMs = startTimestampMs;
         this.placeConfidence = placeConfidence;
         this.centerLatE7 = centerLatE7;
         this.centerLngE7 = centerLngE7;
@@ -46,12 +47,15 @@ class PlaceVisit {
     }
 
     public String generateSqlString() {
-        return ("(" + location.latitudeE7
+        return ("("
+                + location.latitudeE7
                 + ", " + location.latitudeE7
                 + ", " +  "\"" + location.placeId +  "\""
                 + ", " +   "\"" + location.address +  "\""
-                + ", " + "\"" +location.name + "\""
+                + ", " + "\"" + location.name + "\""
                 + ", " + location.sourceInfo.deviceTag
-                + ", " +  duration.toMillis() + ")");
+                + ", " +  duration.toMillis()
+                + ", " + startTimestampMs
+                + ")");
     }
 }

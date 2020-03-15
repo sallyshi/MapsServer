@@ -17,7 +17,7 @@ public class Main {
             JsonReader reader = new JsonReader((new InputStreamReader(main.processFile(s))));
             mapsJsonParser.read(reader);
         }
-        main.executeQuery();
+       // main.executeQuery();
     }
 
     public void openDatabase() {
@@ -25,7 +25,7 @@ public class Main {
             Connection conn = DriverManager.getConnection("jdbc:sqlite:test.db");
             Statement stat = conn.createStatement();
             stat.executeUpdate("drop table placevisit;");
-            stat.executeUpdate("create table placevisit (lat, long, placeId, address, name, deviceTag, durationMs);");
+            stat.executeUpdate("create table placevisit (lat, long, placeId, address, name, deviceTag, durationMs, startTimestampMs);");
             conn.close();
         } catch (SQLException e) {
             e.printStackTrace();

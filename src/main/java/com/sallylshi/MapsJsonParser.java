@@ -7,18 +7,13 @@ import java.time.Instant;
 import java.util.ArrayList;
 
 import com.google.gson.stream.JsonReader;
+import javafx.util.Pair;
 
 public class MapsJsonParser {
     Location location;
     Duration duration;
-    String placeConfidence;
-    String centerLatE7;
-    String centerLngE7;
-    double visitConfidence;
-    ArrayList<Location> otherCandidateLocations;
-    PlaceVisit.EditConfirmationStatus editConfirmationStatus;
 
-    String read(JsonReader reader) {
+    void read(JsonReader reader) {
         try {
             ArrayList<PlaceVisit> placeVisits = new ArrayList<>();
             ArrayList<ActivitySegment> activitySegments = new ArrayList<>();
@@ -29,15 +24,12 @@ public class MapsJsonParser {
             while (reader.hasNext()) {
                 reader.beginObject();
                 String n = reader.nextName();
-                System.out.println("read: while reader has next " + n);
                 switch (n) {
                     case "placeVisit":
                         placeVisits.add(parsePlaceVisit(reader));
                         break;
                     case "activitySegment":
                         activitySegments.add(parseActivitySegment(reader));
-                        //Temporary
-                        //reader.skipValue();
                         break;
                     default:
                         System.out.println("MapsJsonReader: Parsing overall couldn't find name " + n + ". Went into " +
@@ -45,7 +37,6 @@ public class MapsJsonParser {
                         break;
                 }
                 reader.endObject();
-                System.out.println("Successfully ended object in while loop" + reader.peek());
             }
             reader.endArray();
             reader.endObject();
@@ -54,9 +45,6 @@ public class MapsJsonParser {
             Statement stat = conn.createStatement();
             for (PlaceVisit p : placeVisits) {
                 stat.addBatch("insert into placevisit values " + p.generateSqlString() + ";");
-//                System.out.println(
-//                        "PlaceVisit: " + p.location + p.duration + p.centerLngE7 + p.centerLatE7 +
-//                                "List size is: " + placeVisits.size());
             }
             stat.executeBatch();
             ResultSet rs = stat.executeQuery("select * from placevisit;");
@@ -68,14 +56,13 @@ public class MapsJsonParser {
                 System.out.println("name = " + rs.getString("name"));
                 System.out.println("deviceTag = " + rs.getLong("deviceTag"));
                 System.out.println("durationMs = " + rs.getLong("durationMs"));
+                System.out.println("startTimestampMs = " + rs.getLong("startTimestampMs"));
             }
             conn.close();
             System.out.println("Successfully executed batch for placevisit.");
         } catch (IOException | SQLException e) {
             e.printStackTrace();
         }
-
-        return "YAY";
     }
 
     private ActivitySegment parseActivitySegment(JsonReader reader) {
@@ -85,6 +72,7 @@ public class MapsJsonParser {
             Location endLocation = null;
             Duration duration = null;
             long distance = 0;
+            long startTimestampMs = 0;
             ActivitySegment.Confidence confidence = null;
             ActivitySegment.ActivityType activityType = null;
             ArrayList<Activity> activities = new ArrayList<>();
@@ -103,7 +91,9 @@ public class MapsJsonParser {
                         endLocation = parseLocation(reader);
                         break;
                     case "duration":
-                        duration = parseDuration(reader);
+                        Pair<Duration, Long> pair = parseDurationAndTimestamp(reader);
+                        duration = pair.getKey();
+                        startTimestampMs = pair.getValue();
                         break;
                     case "distance": //meters
                         distance = reader.nextLong();
@@ -174,7 +164,7 @@ public class MapsJsonParser {
                 }
             }
             reader.endObject();
-            activitySegment = new ActivitySegment(startLocation, endLocation, duration, distance, confidence, activityType, activities, waypointPath, simplifiedRawPath);
+            activitySegment = new ActivitySegment(startLocation, endLocation, duration, distance, confidence, activityType, activities, waypointPath, simplifiedRawPath, startTimestampMs);
         } catch (IOException e) {
             System.out.println("MapsJsonParse: IOException at parseActivitySegment");
         }
@@ -287,6 +277,7 @@ public class MapsJsonParser {
             long centerLatE7 = 0;
             long centerLngE7 = 0;
             int visitConfidence = 0;
+            long startTimestampMs = 0;
             ArrayList<Location> otherCandidateLocations = new ArrayList<>();
             ArrayList<PlaceVisit> childVisits = new ArrayList<>();
             PlaceVisit.EditConfirmationStatus editConfirmationStatus = null;
@@ -298,7 +289,9 @@ public class MapsJsonParser {
                         location = parseLocation(reader);
                         break;
                     case "duration":
-                        duration = parseDuration(reader);
+                        Pair<Duration, Long> pair = parseDurationAndTimestamp(reader);
+                        duration = pair.getKey();
+                        startTimestampMs = pair.getValue();
                         break;
                     case "placeConfidence":
                         placeConfidence = Enum.valueOf(PlaceVisit.PlaceConfidence.class,
@@ -347,14 +340,14 @@ public class MapsJsonParser {
 
             placeVisit = new PlaceVisit(location, duration, placeConfidence, centerLatE7, centerLngE7
                     , visitConfidence, otherCandidateLocations, editConfirmationStatus, childVisits,
-                    null);
+                    null, startTimestampMs);
         } catch (IOException e) {
             System.out.println("MapsJsonReader: IOException from parsePlaceVisit");
         }
         return placeVisit;
     }
 
-    private Duration parseDuration(JsonReader reader) throws IOException {
+    private Pair<Duration, Long> parseDurationAndTimestamp(JsonReader reader) throws IOException {
         reader.beginObject();
         long startTimestampMs = 0;
         long endTimestampMs = 0;
@@ -373,8 +366,8 @@ public class MapsJsonParser {
             }
         }
         reader.endObject();
-        return Duration.between(Instant.ofEpochMilli(startTimestampMs),
-                Instant.ofEpochMilli(endTimestampMs));
+        return new Pair<>(Duration.between(Instant.ofEpochMilli(startTimestampMs),
+                Instant.ofEpochMilli(endTimestampMs)), startTimestampMs);
     }
 
     private Location parseLocation(JsonReader reader) throws IOException {
