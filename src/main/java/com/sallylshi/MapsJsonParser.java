@@ -397,10 +397,12 @@ public class MapsJsonParser {
                     placeId = reader.nextString();
                     break;
                 case "address":
-                    address = reader.nextString();
+                    address = reader.nextString().replaceAll(",", " ");
+                    address = address.replaceAll("\n", " ");
                     break;
                 case "name":
                     name = reader.nextString().replaceAll("\\\"", "");
+                    name = name.replaceAll(", ", " ");
                     break;
                 case "sourceInfo":
                     sourceInfo = parseSourceInfo(reader);
