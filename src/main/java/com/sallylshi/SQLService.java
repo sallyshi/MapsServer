@@ -7,7 +7,7 @@ import java.sql.*;
 
 public class SQLService {
 
-    public static void main (String[] args) {
+    public static void main(String[] args) {
         SQLService sqlService = new SQLService();
         sqlService.execute(Integer.parseInt(args[0]));
     }
@@ -16,7 +16,7 @@ public class SQLService {
         try {
             ServerSocket server = new ServerSocket(port);
 
-            while(true) {
+            while (true) {
                 Socket socket = server.accept();
 
                 // Connect to database.
@@ -32,9 +32,14 @@ public class SQLService {
 
                 // Print out query results and write to socket.
                 PrintWriter printWriter = new PrintWriter(socket.getOutputStream(), true);
-                while(rs.next()) {
-                    int cols = rs.getMetaData().getColumnCount();
-                    for(int i = 1; i <= cols; i++) {
+                int cols = rs.getMetaData().getColumnCount();
+
+                for (int i = 1; i <= cols; i++) {
+                    printWriter.write(rs.getMetaData().getColumnName(i) + ", ");
+                }
+
+                while (rs.next()) {
+                    for (int i = 1; i <= cols; i++) {
                         printWriter.write(rs.getString(i) + ", ");
                     }
                     printWriter.println();
