@@ -26,6 +26,7 @@ public class MainServer {
                 Socket socket = server.accept();
                 MapsJsonParser mapsJsonParser = new MapsJsonParser();
                 JsonReader reader = new JsonReader((new InputStreamReader(socket.getInputStream())));
+                openDatabase();
                 mapsJsonParser.read(reader);
             }
         } catch (IOException e) {

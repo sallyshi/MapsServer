@@ -131,6 +131,9 @@ public class MapsJsonParser {
                         reader.endArray();
                         reader.endObject();
                         break;
+                    case "editConfirmationStatus":
+                        reader.skipValue();
+                        break;
                     case "transitPath":
                         reader.beginObject();
                         while(reader.hasNext()) {

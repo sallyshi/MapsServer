@@ -1,5 +1,6 @@
 package com.sallylshi;
 
+import javax.xml.transform.Source;
 import java.time.Duration;
 import java.util.ArrayList;
 
@@ -10,6 +11,7 @@ class PlaceVisit {
     }
 
     enum PlaceConfidence {
+        USER_CONFIRMED,
         LOW_CONFIDENCE,
         MEDIUM_CONFIDENCE,
         HIGH_CONFIDENCE;
@@ -47,15 +49,20 @@ class PlaceVisit {
     }
 
     public String generateSqlString() {
-        return ("("
+        long deviceTag = -1;
+
+        if (location.sourceInfo != null) {
+            deviceTag = location.sourceInfo.deviceTag;
+        }
+        return "("
                 + location.latitudeE7
                 + ", " + location.latitudeE7
-                + ", " +  "\"" + location.placeId +  "\""
-                + ", " +   "\"" + location.address +  "\""
+                + ", " + "\"" + location.placeId + "\""
+                + ", " + "\"" + location.address + "\""
                 + ", " + "\"" + location.name + "\""
-                + ", " + location.sourceInfo.deviceTag
-                + ", " +  duration.toMillis()
+                + ", " + deviceTag
+                + ", " + duration.toMillis()
                 + ", " + startTimestampMs
-                + ")");
+                + ")";
     }
 }
