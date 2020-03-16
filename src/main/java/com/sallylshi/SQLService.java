@@ -35,7 +35,7 @@ public class SQLService {
                 while(rs.next()) {
                     int cols = rs.getMetaData().getColumnCount();
                     for(int i = 1; i <= cols; i++) {
-                        printWriter.write(rs.getString(i) + " ");
+                        printWriter.write(rs.getString(i) + ", ");
                     }
                     printWriter.println();
                 }
