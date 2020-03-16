@@ -24,6 +24,7 @@ public class MainClient {
             FileInputStream fileInputStream = new FileInputStream(filePath);
             int bytesRead;
             while ((bytesRead = fileInputStream.read(bytes)) > -1) {
+                System.out.println("bytesRead from client is " + bytesRead);
                 socket.getOutputStream().write(bytes, 0, bytesRead);
             }
         } catch (IOException e) {
