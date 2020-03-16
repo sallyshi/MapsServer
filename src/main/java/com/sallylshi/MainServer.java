@@ -21,20 +21,21 @@ public class MainServer {
     public void execute(int port) {
         try {
             ServerSocket server = new ServerSocket(port);
+            createDatabase();
 
             while(true) {
                 Socket socket = server.accept();
                 MapsJsonParser mapsJsonParser = new MapsJsonParser();
                 JsonReader reader = new JsonReader((new InputStreamReader(socket.getInputStream())));
-                openDatabase();
                 mapsJsonParser.read(reader);
+                socket.close();
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public void openDatabase() {
+    public void createDatabase() {
         try {
             Connection conn = DriverManager.getConnection("jdbc:sqlite:test.db");
             Statement stat = conn.createStatement();

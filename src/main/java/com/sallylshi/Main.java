@@ -12,12 +12,12 @@ public class Main {
     public static void main(String[] args) {
         Main main = new Main();
         MapsJsonParser mapsJsonParser = new MapsJsonParser();
-        main.openDatabase();
-        for(String s : args) {
-            JsonReader reader = new JsonReader((new InputStreamReader(main.processFile(s))));
-            mapsJsonParser.read(reader);
-        }
-       // main.executeQuery();
+//        main.openDatabase();
+//        for(String s : args) {
+//            JsonReader reader = new JsonReader((new InputStreamReader(main.processFile(s))));
+//            mapsJsonParser.read(reader);
+//        }
+        main.executeQuery();
     }
 
     public void openDatabase() {
@@ -39,7 +39,7 @@ public class Main {
         ResultSet rs = stat.executeQuery("select name, count(*) as ct from placevisit group by name order by ct desc;");
             while (rs.next()) {
                 System.out.println("name = " + rs.getString("name"));
-                System.out.println("ct = " + rs.getLong("ct"));
+                System.out.println("ct = " + rs.getString("ct"));
             }
             conn.close();
         } catch (SQLException e) {

@@ -308,8 +308,7 @@ public class MapsJsonParser {
                         reader.endArray();
                         break;
                     case "centerLatE7":
-                        long lat = reader.nextLong();
-                        centerLatE7 = lat;
+                        centerLatE7 = reader.nextLong();
                         break;
                     case "centerLngE7":
                         centerLngE7 = reader.nextLong();

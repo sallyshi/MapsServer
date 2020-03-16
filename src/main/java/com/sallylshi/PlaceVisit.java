@@ -56,7 +56,7 @@ class PlaceVisit {
         }
         return "("
                 + location.latitudeE7
-                + ", " + location.latitudeE7
+                + ", " + location.longitudeE7
                 + ", " + "\"" + location.placeId + "\""
                 + ", " + "\"" + location.address + "\""
                 + ", " + "\"" + location.name + "\""
