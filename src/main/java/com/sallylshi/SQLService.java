@@ -30,11 +30,11 @@ public class SQLService {
                 ResultSet rs = stat.executeQuery(sqlQuery);
                 System.out.println("Finished executing sql query.");
 
-                // Print out query results.
+                // Print out query results and write to socket.
                 PrintWriter printWriter = new PrintWriter(socket.getOutputStream(), true);
-                while(!rs.next()) {
+                while(rs.next()) {
                     int cols = rs.getMetaData().getColumnCount();
-                    for(int i = 0; i < cols; i++) {
+                    for(int i = 1; i <= cols; i++) {
                         printWriter.write(rs.getString(i) + " ");
                     }
                     printWriter.println();

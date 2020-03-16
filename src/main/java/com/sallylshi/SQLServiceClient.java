@@ -23,6 +23,7 @@ public class SQLServiceClient {
             // Write query to socket for server.
             String sqlQuery = "select strftime('%Y-%m', startTimestampMs / 1000, 'unixepoch') as yearmonth, count(*) as ct from placevisit group by yearmonth order by ct desc;\n";
             socket.getOutputStream().write(sqlQuery.getBytes());
+            System.out.println("Finished writing sql query to socket.");
 
             // Read query results from socket.
             BufferedReader reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
